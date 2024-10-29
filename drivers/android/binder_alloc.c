@@ -31,6 +31,7 @@
 #include <linux/list_lru.h>
 #include <linux/uaccess.h>
 #include <linux/highmem.h>
+#include <linux/millet.h>
 #include "binder_alloc.h"
 #include "binder_trace.h"
 
@@ -356,42 +357,9 @@ static inline struct vm_area_struct *binder_alloc_get_vma(
 	return vma;
 }
 
-static void debug_low_async_space_locked(struct binder_alloc *alloc, int pid)
-{
-	/*
-	 * Find the amount and size of buffers allocated by the current caller;
-	 * The idea is that once we cross the threshold, whoever is responsible
-	 * for the low async space is likely to try to send another async txn,
-	 * and at some point we'll catch them in the act. This is more efficient
-	 * than keeping a map per pid.
-	 */
-	struct rb_node *n;
-	struct binder_buffer *buffer;
-	size_t total_alloc_size = 0;
-	size_t num_buffers = 0;
-
-	for (n = rb_first(&alloc->allocated_buffers); n != NULL;
-		 n = rb_next(n)) {
-		buffer = rb_entry(n, struct binder_buffer, rb_node);
-		if (buffer->pid != pid)
-			continue;
-		if (!buffer->async_transaction)
-			continue;
-		total_alloc_size += binder_alloc_buffer_size(alloc, buffer)
-			+ sizeof(struct binder_buffer);
-		num_buffers++;
-	}
-
-	/*
-	 * Warn if this pid has more than 50 transactions, or more than 50% of
-	 * async space (which is 25% of total buffer size).
-	 */
-	if (num_buffers > 50 || total_alloc_size > alloc->buffer_size / 4) {
-		binder_alloc_debug(BINDER_DEBUG_USER_ERROR,
-			     "%d: pid %d spamming oneway? %zd buffers allocated for a total size of %zd\n",
-			      alloc->pid, pid, num_buffers, total_alloc_size);
-	}
-}
+#ifdef CONFIG_MILLET
+extern struct task_struct *binder_buff_owner(struct binder_alloc *alloc);
+#endif
 
 static struct binder_buffer *binder_alloc_new_buf_locked(
 				struct binder_alloc *alloc,
@@ -432,6 +400,24 @@ static struct binder_buffer *binder_alloc_new_buf_locked(
 				alloc->pid, extra_buffers_size);
 		return ERR_PTR(-EINVAL);
 	}
+#ifdef CONFIG_MILLET
+	if (is_async
+		&& (alloc->free_async_space
+			< WARN_AHEAD_MSGS * (size + sizeof(struct binder_buffer))
+			|| alloc->free_async_space < binder_warn_ahead_space)) {
+			struct millet_data data;
+			struct task_struct *owner;
+
+			owner = binder_buff_owner(alloc);
+			if (owner) {
+				memset(&data, 0, sizeof(struct millet_data));
+				data.pri[0] =  BINDER_BUFF_WARN;
+				data.mod.k_priv.binder.trans.dst_task = owner;
+				data.mod.k_priv.binder.trans.src_task = current;
+				millet_sendmsg(BINDER_TYPE, owner, &data);
+			}
+	}
+#endif
 	if (is_async &&
 	    alloc->free_async_space < size + sizeof(struct binder_buffer)) {
 		binder_alloc_debug(BINDER_DEBUG_BUFFER_ALLOC,
