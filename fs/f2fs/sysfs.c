@@ -614,6 +614,7 @@ enum feat_id {
 	FEAT_CASEFOLD,
 	FEAT_COMPRESSION,
 	FEAT_RO,
+	FEAT_TEST_DUMMY_ENCRYPTION_V2,
 };
 
 static ssize_t f2fs_feature_show(struct f2fs_attr *a,
@@ -635,6 +636,7 @@ static ssize_t f2fs_feature_show(struct f2fs_attr *a,
 	case FEAT_CASEFOLD:
 	case FEAT_COMPRESSION:
 	case FEAT_RO:
+	case FEAT_TEST_DUMMY_ENCRYPTION_V2:	
 		return sprintf(buf, "supported\n");
 	}
 	return 0;
