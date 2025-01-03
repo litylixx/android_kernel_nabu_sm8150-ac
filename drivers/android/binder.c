@@ -50,7 +50,6 @@
  * ...
  */
 
-#define BR_ONEWAY_SPAM_SUSPECT 0x1AD37190
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <asm/cacheflush.h>
@@ -186,6 +185,9 @@ static inline void binder_user_error(const char *fmt, ...)
 }
 #endif
 
+#define MAX_BINDER_BR (_IOC_NR(BR_ONEWAY_SPAM_SUSPECT) > _IOC_NR(BR_FROZEN_REPLY) ? \
+                       _IOC_NR(BR_ONEWAY_SPAM_SUSPECT) : _IOC_NR(BR_FROZEN_REPLY))
+
 #define to_flat_binder_object(hdr) \
 	container_of(hdr, struct flat_binder_object, hdr)
 
@@ -209,8 +211,7 @@ enum binder_stat_types {
 };
 
 struct binder_stats {
-	atomic_t br[_IOC_NR(BR_ONEWAY_SPAM_SUSPECT) + 1];
-	atomic_t br[_IOC_NR(BR_FROZEN_REPLY) + 1];
+    atomic_t br[MAX_BINDER_BR + 1];
 	atomic_t bc[_IOC_NR(BC_REPLY_SG) + 1];
 	atomic_t obj_created[BINDER_STAT_COUNT];
 	atomic_t obj_deleted[BINDER_STAT_COUNT];
