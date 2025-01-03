@@ -35,6 +35,7 @@ struct binder_transaction;
  * @free:               %true if buffer is free
  * @clear_on_free:      %true if buffer must be zeroed after use
  * @allow_user_free:    %true if user is allowed to free buffer
+ * @oneway_spam_suspect: %true if total async allocate size just exceed
  * @async_transaction:  %true if buffer is in use for an async txn
  * @debug_id:           unique ID for debugging
  * @transaction:        pointer to associated struct binder_transaction
@@ -55,6 +56,7 @@ struct binder_buffer {
 	unsigned clear_on_free:1;
 	unsigned allow_user_free:1;
 	unsigned async_transaction:1;
+	unsigned oneway_spam_suspect:1;
 	unsigned debug_id:28;
 
 	struct binder_transaction *transaction;
@@ -97,7 +99,7 @@ struct binder_lru_page {
  * @buffer_size:        size of address space specified via mmap
  * @pid:                pid for associated binder_proc (invariant after init)
  * @pages_high:         high watermark of offset in @pages
- *
+ * @oneway_spam_detected: %true if oneway spam detection fired, clear that
  * Bookkeeping structure for per-proc address space management for binder
  * buffers. It is normally initialized during binder_init() and binder_mmap()
  * calls. The address space is used for both user-visible buffers and for
@@ -117,6 +119,7 @@ struct binder_alloc {
 	uint32_t buffer_free;
 	int pid;
 	size_t pages_high;
+	bool oneway_spam_detected;
 };
 
 #ifdef CONFIG_ANDROID_BINDER_IPC_SELFTEST
