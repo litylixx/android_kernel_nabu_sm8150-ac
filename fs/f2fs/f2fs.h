@@ -4467,7 +4467,7 @@ static inline void f2fs_i_compr_blocks_update(struct inode *inode,
 		return;
 
 	/* don't update i_compr_blocks if saved blocks were released */
-	if (!add && !F2FS_I(inode)->i_compr_blocks)
+	if (!add && !atomic_read(&F2FS_I(inode)->i_compr_blocks))
 		return;
 
 	if (add) {
