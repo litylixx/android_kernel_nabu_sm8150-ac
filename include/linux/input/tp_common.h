@@ -2,12 +2,15 @@
 
 extern struct kobject *touchpanel_kobj;
 
+#ifndef _TP_COMMON_H_
+#define _TP_COMMON_H_
+
 struct tp_common_ops {
-	ssize_t (*show)(struct kobject *kobj, struct kobj_attribute *attr,
-			char *buf);
-	ssize_t (*store)(struct kobject *kobj, struct kobj_attribute *attr,
-			 const char *buf, size_t count);
+    ssize_t (*show)(struct kobject *kobj, struct kobj_attribute *attr, char *buf);
+    ssize_t (*store)(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count);
 };
+
+#endif /* _TP_COMMON_H_ */
 
 int tp_common_set_double_tap_ops(struct tp_common_ops *ops);
 int tp_common_set_pen_update_ops(struct tp_common_ops *ops);
