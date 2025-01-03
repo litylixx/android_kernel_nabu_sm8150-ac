@@ -114,7 +114,7 @@ static ssize_t double_tap_store(struct kobject *kobj,
 
     rc = kstrtoint(buf, 10, &val);
     if (rc)
-    return -EINVAL;
+        return -EINVAL;
 
     ts->db_wakeup = !!val;
     return count;
@@ -164,31 +164,6 @@ const uint16_t gesture_key_array[] = {
 	KEY_POWER,  //GESTURE_SLIDE_RIGHT
 	KEY_WAKEUP,  //GESTURE_PEN_ONE_CLICK
 };
-
-#ifdef CONFIG_TOUCHSCREEN_COMMON
-static ssize_t double_tap_show(struct kobject *kobj,
-			       struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", ts->db_wakeup);
-}
-
-static ssize_t double_tap_store(struct kobject *kobj,
-				struct kobj_attribute *attr, const char *buf,
-				size_t count)
-{
-	int rc, val;
-
-	rc = kstrtoint(buf, 10, &val);
-	if (rc)
-		return -EINVAL;
-
-	ts->db_wakeup = !!val;
-	return count;
-}
-
-static struct tp_common_ops double_tap_ops = { .show = double_tap_show,
-					       .store = double_tap_store };
-#endif
 #endif
 
 #ifdef CONFIG_TOUCHSCREEN_COMMON
